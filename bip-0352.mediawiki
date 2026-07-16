@@ -13,7 +13,7 @@
               2022-03-28: https://gnusha.org/pi/bitcoindev/CAPv7TjbXm953U2h+-12MfJ24YqOM5Kcq77_xFTjVK+R2nf-nYg@mail.gmail.com/ [bitcoin-dev] Silent Payments – Non-interactive private payments with no on-chain overhead
               2022-10-11: https://gnusha.org/pi/bitcoindev/P_21MLHGJicZ-hkbC4DGu86c5BtNKiH8spY4TOw5FJsfimdi_6VyHzU_y-s1mZsOcC2FA3EW_6w6W5qfV9dRK_7AvTAxDlwVfU-yhWZPEuo=@protonmail.com/ [bitcoin-dev] Silent Payment v4 (coinjoin support added)
               2023-08-04: https://gnusha.org/pi/bitcoindev/ZM03twumu88V2NFH@petertodd.org/ [bitcoin-dev] BIP-352 Silent Payments addresses should have an expiration time
-  Version: 1.1.1
+  Version: 1.1.2
   Requires: 340, 341, 350
 </pre>
 
@@ -341,7 +341,7 @@ If each of the checks in ''[[#scanning-silent-payment-eligible-transactions|Scan
 ** If ''input_hash'' is not a valid scalar, i.e., if ''input_hash = 0'' or ''input_hash'' is larger or equal to the secp256k1 group order, fail
 * Let ''ecdh_shared_secret = input_hash·b<sub>scan</sub>·A''
 * Check for outputs:
-** Let ''outputs_to_check'' be the taproot output keys from all taproot outputs in the transaction (spent and unspent).
+** Let ''outputs_to_check'' be the taproot output keys from all taproot outputs in the transaction (spent and unspent), in the order in which they appear in the transaction.<ref name="why_output_order">'''Why insist on transaction output order?''' For spec-compliant senders the scan result does not depend on the iteration order, as at most one output can match for any given ''k''. However, a sender violating the specification by reusing ''k'' can cause more than one output to match at the same ''k''. Such a violation is likely not an accident, but a deliberate griefing attempt to confuse the receiver. Scanning in a well-defined order ensures that all implementations detect the same output (the remaining ones are not found), so that rescans in different wallets yield identical results.</ref>
 ** Starting with ''k = 0'':
 *** If ''k == K<sub>max</sub>'' (=2323), stop scanning.<ref name="why_limit_k"></ref>
 *** Let ''t<sub>k</sub> = hash<sub>BIP0352/SharedSecret</sub>(ser<sub>P</sub>(ecdh_shared_secret) || ser<sub>32</sub>(k))''
@@ -504,6 +504,8 @@ The <code>MAJOR</code> version is incremented if changes to the BIP are introduc
 The <code>MINOR</code> version is incremented whenever the inputs or the output of an algorithm changes in a backward-compatible way or new backward-compatible functionality is added.
 The <code>PATCH</code> version is incremented for other changes that are noteworthy (bug fixes, test vectors, important clarifications, etc.).
 
+* '''1.1.2''' (2026-07-16):
+** Specify output iteration order in scanning algorithm to ensure deterministic results across implementations in the case where a sender maliciously reuses ''k''.
 * '''1.1.1''' (2026-04-16):
 ** Add test vector "Input keys intermediate sum is zero but final sum is non-zero"
 * '''1.1.0''' (2026-03-02):
